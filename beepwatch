@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# beepwatch - Watch the output of a command and beep when it changes
+# written by Michael Migdol (with help from ChatGPT)
+# License: MIT License (see LICENSE file)
+
+# Check for command-line arguments
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <command> [args...]"
+  exit 1
+fi
+
+# Store the command and its arguments
+command="$1"
+shift
+
+# Create a temporary file to store the last output
+last_output_file="/tmp/beepwatch_last_output"
+
+# Execute the command with its arguments to get the initial output
+initial_output="$("$command" "$@")"
+
+# Display the initial output to the console
+echo "$initial_output"
+
+# Initialize the last output with the initial output
+echo -n "$initial_output" > "$last_output_file"
+
+# Determine the platform (Linux or macOS)
+platform=$(uname)
+
+while true; do
+  # Execute the command with its arguments and capture its output
+  output="$("$command" "$@")"
+
+  # Compare the current output to the last recorded output
+  if [ "$output" != "$(cat "$last_output_file")" ]; then
+    # Output has changed
+    if [ "$platform" == "Darwin" ]; then
+      # macOS platform, use osascript for beeping
+      osascript -e "beep"
+    else
+      # Linux platform (or other), use beep if available, else echo a bell character
+      if command -v beep &>/dev/null; then
+        beep
+      else
+        echo -e "\a"  # Output a bell character
+      fi
+    fi
+
+    # Display the current output and update the last output
+    echo "$output"
+    echo "$output" > "$last_output_file"
+  fi
+
+  # Sleep for a default interval of 1 second
+  sleep 1
+done
