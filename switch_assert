@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Enable debugging mode
+set -x
+
+# Check if the input file is provided as an argument or use 'input_patterns.txt' as the default filename
+input_patterns_file="${1:-input_patterns.txt}"
+
+# Function to switch actual and expected in an assert statement
+switch_assert_statement() {
+    local statement="$1"
+    local parts=($statement)
+    
+    if [[ ${#parts[@]} -eq 4 && ${parts[0]} == "assert" && ${parts[2]} == "==" ]]; then
+        echo "assert ${parts[3]} == ${parts[1]}"
+    else
+        echo "$statement"
+    fi
+}
+
+# Process the input patterns file
+while IFS= read -r target_statement; do
+    echo "Processing pattern: $target_statement"
+
+    # Generate the modified sed command for the input pattern
+    sed_command="s/${target_statement//\//\\/}/$(switch_assert_statement "$target_statement" | sed 's/[\/&]/\\&/g')/g"
+    echo "Generated modified sed command: $sed_command"
+
+    # Generate the find command to locate Python files, excluding .venv, and apply the modified sed command
+    find_command="find . -type d -name '.venv' -prune -o -type f -name '*.py' -exec sed -i'' -e \"$sed_command\" {} \;"
+    echo "Generated find command: $find_command"
+
+    # Execute the find command to switch matching assert statements in Python files
+    eval "$find_command"
+
+    # Check if sed returned an error
+    if [ $? -ne 0 ]; then
+        echo "Error: Sed command failed. Exiting."
+        exit 1
+    fi
+done < "$input_patterns_file"
+
+echo "Finished processing patterns in Python files."
