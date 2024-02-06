@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -x
+git diff $(git stash show -p -u stash@{0})
+if [ $? -ne 0 ]; then
+    git stash push --keep-index --include-untracked -m "Automatic stash at $(date)"
+    echo "Stashed changes at $(date)"
+fi
