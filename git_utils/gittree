@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Generates an ascii tree of the git repo, excluding files in .gitignore
+
+# tree is not installed by default on macOS - install if not found
+if ! [ -x "$(command -v tree)" ];
+then
+    # check if Mac
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "tree not found - installing with brew"
+        brew install tree
+    else
+        echo "tree not found - please install manually"
+        exit 1
+    fi
+fi
+tree -I '$(cat .gitignore | sed "s/#.*//;/^$/d")'
