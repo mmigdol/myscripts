@@ -1,5 +1,10 @@
 #!/bin/bash
-set -x
+
+# This script copies a file to the ~/.local/bin directory
+# If a source file is not provided as a command-line argument, the script will find the most recently modified file in the current directory
+# If the destination file already exists and is newer than the source file, 
+# the script will prompt the user for confirmation before overwriting it
+
 # Function to prompt the user for confirmation
 confirm_overwrite() {
     read -p "The destination file '$1' is newer than the source file. Do you want to overwrite it? [y/n]: " overwrite_confirm
