@@ -13,4 +13,14 @@ then
         exit 1
     fi
 fi
-tree -I '$(cat .gitignore | sed "s/#.*//;/^$/d")'
+
+# Read .gitignore file and construct list of -I clauses
+exclude_patterns=""
+while IFS= read -r line; do
+  if [[ $line != "" && $line != \#* ]]; then  # Exclude empty lines and comments
+    exclude_patterns+=" -I '$line'"
+  fi
+done < .gitignore
+
+# Generate tree diagram with exclusion patterns
+eval "tree $exclude_patterns ."
